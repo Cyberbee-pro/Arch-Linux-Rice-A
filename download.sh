@@ -14,9 +14,9 @@ echo -e "${CYAN} Downloading Required Packages . . . . ${NC}"
 
 
 if command -v git &> /dev/null; then
-    echo "${GREEN}Git is installed: $(git --version) ${NC}"
+    echo -e "${GREEN}Git is installed: $(git --version) ${NC}"
 else
-    echo "${RED}Git is not installed. . . . . ${BLUE}installing Git. . . . .${NC}"
+    echo -e "${RED}Git is not installed. . . . . ${BLUE}installing Git. . . . .${NC}"
     
     if nix profile install nixpkgs#git; then 
         echo -e "${GREEN}Git ${MAGENTA}Installed!!!${NC}"

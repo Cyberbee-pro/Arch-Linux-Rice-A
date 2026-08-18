@@ -34,3 +34,13 @@ else
 fi
 
 
+echo -e "${CYAN} Installing QYLock Theme > > > > > > . . . . ${NC}"
+cd ~
+if cd qylock; then
+  echo -e "${GREEN} Installing QYLock Theme . . . . .${NC}"
+  chmod +x sddm.sh && sudo ./sddm.sh
+
+else
+  echo -e "${RED} QYLock Theme not found${NC}"
+  exit 1
+fi

@@ -1,25 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # Reset / No Color
+NC='\033[0m'
 
 echo -e "${CYAN} Installing Kitty Configuration . . . . ${NC}"
 
-# 1. Ensure target directory exists
-mkdir -p ~/.config/kitty
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+KITTY_SRC="${SCRIPT_DIR}/kitty"
+TARGET_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"
 
-# 2. Copy all configuration files from your project's kitty directory
-KITTY_SRC="/data/programing/Linux_projects/Rice_A/kitty"
+mkdir -p "$TARGET_DIR"
 
-if cp -r "$KITTY_SRC"/* ~/.config/kitty/; then
-    echo -e "${GREEN} Kitty configs installed Successfully! ${NC}"
+if [ -d "$KITTY_SRC" ]; then
+    if cp -r "$KITTY_SRC"/* "$TARGET_DIR"/; then
+        echo -e "${GREEN} Kitty configs installed Successfully! ${NC}"
+    else
+        echo -e "${RED} Failed to copy Kitty configs. ${NC}"
+        exit 1
+    fi
 else
-    echo -e "${RED} Failed to install Kitty configs. ${NC}"
+    echo -e "${RED} Source kitty folder not found at: ${KITTY_SRC} ${NC}"
+    exit 1
 fi

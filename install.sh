@@ -1,51 +1,84 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+# ==============================================================================
+#  COSMOS RICE : System Theme & Shell Installer
+# ==============================================================================
 
+set -euo pipefail
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # Reset / No Color
+NC='\033[0m'
 
-echo -e "${CYAN} Installing Packages . . . . ${NC}"
+DISTRO="${DISTRO:-arch}"
+DOWNLOAD_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/cosmos/downloads"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/Cosmos"
+mkdir -p "$CONFIG_DIR"
 
-# Caelestia Shell
-echo -e "${CYAN} Running Caelestia Shell > > > > > > . . . . ${NC}"
+# 1. Caelestia Shell via Nix Flakes
+echo -e "${CYAN}[..] Running Caelestia Shell Setup . . . .${NC}"
 if command -v nix &> /dev/null; then
-    if nix run github:caelestia-dots/shell; then
-        echo -e "${GREEN} Caelestia Shell set Successful ${NC}"
+    if nix --extra-experimental-features 'nix-command flakes' run github:caelestia-dots/shell; then
+        echo -e "${GREEN}[OK] Caelestia Shell executed successfully.${NC}"
     else
-        echo -e "${RED} Caelestia Shell set Unsuccessful${NC}"
+        echo -e "${RED}[ERR] Caelestia Shell failed.${NC}"
         exit 1
     fi
 else
-    echo -e "${YELLOW} Nix command not found. Skipping 'nix run' step. ${NC}"
+    echo -e "${YELLOW}[!] Nix binary not found. Skipping Caelestia Shell.${NC}"
 fi
 
-# CyberGRUB-2077
-echo -e "${CYAN} Installing Grub Theme > > > > > > . . . . ${NC}"
-if [ -d "$HOME/CyberGRUB-2077" ]; then
-    echo -e "${GREEN} Installing Cyberpunk77 Grub Theme . . . . .${NC}"
-    cd "$HOME/CyberGRUB-2077" || exit 1
-    sudo bash ./install.sh -L arasaka
-else
-    echo -e "${RED} Cyberpunk77 Grub Theme directory not found${NC}"
-    exit 1
-fi
+# 2. Distro-Gated System Theme Installation
+if [ "$DISTRO" = "arch" ]; then
+    # CyberGRUB-2077
+    echo -e "${CYAN}[..] Installing CyberGRUB Theme (Arch Linux) . . . .${NC}"
+    if [ -d "$DOWNLOAD_CACHE/CyberGRUB-2077" ]; then
+        (
+            cd "$DOWNLOAD_CACHE/CyberGRUB-2077"
+            sudo bash ./install.sh -L arasaka
+        )
+        echo -e "${GREEN}[OK] CyberGRUB-2077 installed.${NC}"
+    else
+        echo -e "${RED}[ERR] CyberGRUB source not found in cache. Run download.sh first.${NC}"
+        exit 1
+    fi
 
-# QYLock SDDM Theme
-echo -e "${CYAN} Installing QYLock Theme > > > > > > . . . . ${NC}"
-if [ -d "$HOME/qylock" ]; then
-    echo -e "${GREEN} Installing QYLock Theme . . . . .${NC}"
-    cd "$HOME/qylock" || exit 1
-    chmod +x sddm.sh && sudo ./sddm.sh
+    # QYLock SDDM Theme
+    echo -e "${CYAN}[..] Installing QYLock SDDM Theme (Arch Linux) . . . .${NC}"
+    if [ -d "$DOWNLOAD_CACHE/qylock" ]; then
+        (
+            cd "$DOWNLOAD_CACHE/qylock"
+            chmod +x sddm.sh
+            sudo ./sddm.sh
+        )
+        echo -e "${GREEN}[OK] QYLock SDDM installed.${NC}"
+    else
+        echo -e "${RED}[ERR] QYLock source not found in cache. Run download.sh first.${NC}"
+        exit 1
+    fi
 else
-    echo -e "${RED} QYLock Theme directory not found${NC}"
-    exit 1
+    # Declarative NixOS Generator
+    echo -e "${CYAN}[..] Generating Declarative NixOS Module for Themes . . . .${NC}"
+    cat << 'EOF' > "$CONFIG_DIR/nixos-theme-module.nix"
+# Cosmos Rice - Declarative Theme Configuration for NixOS
+{ pkgs, ... }:
+
+{
+  # 1. SDDM Configuration
+  services.displayManager.sddm = {
+    enable = true;
+    theme = "qylock";
+  };
+
+  # 2. GRUB Configuration
+  boot.loader.grub = {
+    enable = true;
+    # Custom GRUB theme packages can be referenced here
+  };
+}
+EOF
+    echo -e "${GREEN}[OK] Declarative NixOS module generated at: ${CONFIG_DIR}/nixos-theme-module.nix${NC}"
+    echo -e "${YELLOW}-> Import this file in your /etc/nixos/configuration.nix to apply system themes.${NC}"
 fi

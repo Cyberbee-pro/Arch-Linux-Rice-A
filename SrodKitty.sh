@@ -24,16 +24,26 @@ if [ ! -d "$KITTY_SRC" ]; then
 fi
 
 # Create timestamped backup if existing config directory is present
-if [ -d "$TARGET_DIR" ] && [ "$(ls -A "$TARGET_DIR" 2>/dev/null)" ]; then
+if [ -e "$TARGET_DIR" ] && { [ -L "$TARGET_DIR" ] || [ "$(ls -A "$TARGET_DIR" 2>/dev/null)" ]; }; then
     BACKUP_PATH="${TARGET_DIR}.backup_$(date +%Y%m%d_%H%M%S)"
+    count=1
+    while [ -e "$BACKUP_PATH" ]; do
+        BACKUP_PATH="${TARGET_DIR}.backup_$(date +%Y%m%d_%H%M%S)_${count}"
+        count=$((count + 1))
+    done
     echo -e "${YELLOW}[..] Backing up existing Kitty config to: ${BACKUP_PATH}${NC}"
     cp -rL "$TARGET_DIR" "$BACKUP_PATH"
 fi
 
+# Remove symlink itself if pointing to read-only Nix store
+if [ -L "$TARGET_DIR" ]; then
+    rm -f "$TARGET_DIR"
+fi
+
 mkdir -p "$TARGET_DIR"
 
-# Use --remove-destination to overwrite immutable/Nix store symlinks cleanly
-if cp -r --remove-destination "$KITTY_SRC"/* "$TARGET_DIR"/; then
+# Copy all files including dotfiles cleanly
+if cp -r --remove-destination "$KITTY_SRC"/. "$TARGET_DIR"/; then
     echo -e "${GREEN}[OK] Kitty configurations deployed successfully to ${TARGET_DIR}.${NC}"
 else
     echo -e "${RED}[ERR] Failed to copy Kitty configuration files.${NC}"

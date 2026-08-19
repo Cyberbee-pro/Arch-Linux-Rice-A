@@ -24,6 +24,10 @@ if [ ! -d "$SOURCE_DIR" ]; then
     exit 1
 fi
 
+if [ -L "$TARGET_DIR" ]; then
+    rm -f "$TARGET_DIR"
+fi
+
 mkdir -p "$TARGET_DIR"
 
 found_count=0

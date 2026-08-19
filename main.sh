@@ -200,7 +200,7 @@ select_distro() {
     echo -e "  ${C_CYAN}[2]${C_RESET} NixOS / Nix  ${C_DIM}(nix flakes / nixpkgs)${C_RESET}"
     echo -e "  ${C_DARK}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
     
-    read -rp "  Select option [1-2]: " d_choice
+    read -rp "  Select option [1-2]: " d_choice || d_choice=""
     case "$d_choice" in
         1)
             export DISTRO="arch"
@@ -233,11 +233,11 @@ run_stage() {
         else
             echo -e "  ${C_BLUE}│${C_RESET}"
             echo -e "  ${C_RED}╰─[ERR] ${stage_title} encountered an error.${C_RESET}\n"
-            read -rp "  Press [Enter] to continue..."
+            read -rp "  Press [Enter] to continue..." || true
         fi
     else
         echo -e "  ${C_RED}╰─[ERR] Script not found: $script_name${C_RESET}\n"
-        read -rp "  Press [Enter] to continue..."
+        read -rp "  Press [Enter] to continue..." || true
     fi
 }
 
@@ -254,7 +254,7 @@ run_all() {
     echo -e "  ${C_DARK}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
     echo -e "  ${C_GREEN}${C_BOLD}[OK] Cosmos Rice deployment completed.${C_RESET}"
     echo -e "  ${C_CYAN}-> Reload current shell via: ${C_YELLOW}exec \$SHELL${C_RESET}\n"
-    read -rp "  Press [Enter] to exit..."
+    read -rp "  Press [Enter] to exit..." || true
     exit 0
 }
 
@@ -277,16 +277,16 @@ while true; do
     echo -e "  ${C_DARK}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
     echo -e "  ${C_RED}[0]${C_RESET} Exit\n"
 
-    read -rp "  Enter choice [0-7]: " choice
+    read -rp "  Enter choice [0-7]: " choice || choice="0"
 
     case "$choice" in
         1) run_all; print_banner ;;
         2) select_distro ;;
-        3) print_banner; run_stage "download.sh" "Downloading Packages & Assets"; read -rp "  Press [Enter] to return..."; print_banner ;;
-        4) print_banner; run_stage "install.sh" "Installing System Themes & Shell"; read -rp "  Press [Enter] to return..."; print_banner ;;
-        5) print_banner; run_stage "SrodKitty.sh" "Deploying Kitty Terminal Configuration"; read -rp "  Press [Enter] to return..."; print_banner ;;
-        6) print_banner; run_stage "setShell.sh" "Configuring Shell & Dynamic ASCII Art"; read -rp "  Press [Enter] to return..."; print_banner ;;
-        7) print_banner; run_stage "syncWallpapers.sh" "Deploying Wallpapers (Structured)"; read -rp "  Press [Enter] to return..."; print_banner ;;
+        3) print_banner; run_stage "download.sh" "Downloading Packages & Assets"; read -rp "  Press [Enter] to return..." || true; print_banner ;;
+        4) print_banner; run_stage "install.sh" "Installing System Themes & Shell"; read -rp "  Press [Enter] to return..." || true; print_banner ;;
+        5) print_banner; run_stage "SrodKitty.sh" "Deploying Kitty Terminal Configuration"; read -rp "  Press [Enter] to return..." || true; print_banner ;;
+        6) print_banner; run_stage "setShell.sh" "Configuring Shell & Dynamic ASCII Art"; read -rp "  Press [Enter] to return..." || true; print_banner ;;
+        7) print_banner; run_stage "syncWallpapers.sh" "Deploying Wallpapers (Structured)"; read -rp "  Press [Enter] to return..." || true; print_banner ;;
         0) echo -e "\n  ${C_DIM}Exiting Cosmos Rice installer.${C_RESET}\n"; exit 0 ;;
         *) echo -e "\n  ${C_RED}[!] Invalid option selected.${C_RESET}"; sleep 1; print_banner ;;
     esac

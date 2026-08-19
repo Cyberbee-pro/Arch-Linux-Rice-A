@@ -12,26 +12,62 @@ YELLOW='\033[0;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-DISTRO="${DISTRO:-arch}"
+detect_distro() {
+    if [ -f /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        source /etc/os-release
+        case "${ID:-}:${ID_LIKE:-}" in
+            *arch*|*endeavouros*|*manjaro*|*garuda*|*artix*) echo "arch" ;;
+            *nixos*|*nix*) echo "nix" ;;
+            *)
+                if command -v pacman &>/dev/null; then echo "arch";
+                elif command -v nix &>/dev/null; then echo "nix";
+                else echo "arch"; fi
+                ;;
+        esac
+    else
+        if command -v pacman &>/dev/null; then echo "arch";
+        elif command -v nix &>/dev/null; then echo "nix";
+        else echo "arch"; fi
+    fi
+}
+
+DISTRO="${DISTRO:-$(detect_distro)}"
 DOWNLOAD_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/cosmos/downloads"
 mkdir -p "$DOWNLOAD_CACHE"
 
 echo -e "${CYAN} Checking and installing core packages for ${DISTRO^^} . . . . ${NC}"
 
-# 1. Package Installation Function
 install_package() {
     local bin_name="$1"
     local nix_pkg="$2"
     local arch_pkg="$3"
 
     if command -v "$bin_name" &> /dev/null; then
-        echo -e "${GREEN}[OK] ${bin_name} is installed: $(${bin_name} --version | head -n 1)${NC}"
+        local ver
+        ver="$("$bin_name" --version 2>&1 | head -n 1 || true)"
+        echo -e "${GREEN}[OK] ${bin_name} is installed: ${ver}${NC}"
     else
         echo -e "${YELLOW}[..] ${bin_name} not found. Installing for ${DISTRO^^}...${NC}"
         if [ "$DISTRO" = "nix" ]; then
-            nix profile install "nixpkgs#${nix_pkg}"
+            if ! command -v nix &>/dev/null; then
+                echo -e "${RED}[ERR] 'nix' package manager not found.${NC}"
+                exit 1
+            fi
+            nix --extra-experimental-features 'nix-command flakes' profile install "nixpkgs#${nix_pkg}"
         else
-            sudo pacman -S --needed --noconfirm "$arch_pkg"
+            if ! command -v pacman &>/dev/null; then
+                echo -e "${RED}[ERR] 'pacman' package manager not found.${NC}"
+                exit 1
+            fi
+            if [ "$EUID" -eq 0 ]; then
+                pacman -S --needed --noconfirm "$arch_pkg"
+            elif command -v sudo &>/dev/null; then
+                sudo pacman -S --needed --noconfirm "$arch_pkg"
+            else
+                echo -e "${RED}[ERR] Root privileges or sudo required to install ${arch_pkg}.${NC}"
+                exit 1
+            fi
         fi
 
         if command -v "$bin_name" &> /dev/null; then
@@ -47,7 +83,6 @@ install_package "git" "git" "git"
 install_package "kitty" "kitty" "kitty"
 install_package "fastfetch" "fastfetch" "fastfetch"
 
-# 2. Resilient Git Downloader Function
 sync_repo() {
     local repo_url="$1"
     local target_dir="$2"
@@ -68,7 +103,6 @@ sync_repo() {
     echo -e "${GREEN}[OK] ${name} ready at ${target_dir}.${NC}"
 }
 
-# Only sync GRUB & SDDM theme repositories on Arch systems where they can be applied
 if [ "$DISTRO" = "arch" ]; then
     sync_repo "https://github.com/adnksharp/CyberGRUB-2077" "$DOWNLOAD_CACHE/CyberGRUB-2077" "CyberGRUB-2077"
     sync_repo "https://github.com/Darkkal44/qylock" "$DOWNLOAD_CACHE/qylock" "QYLock SDDM"

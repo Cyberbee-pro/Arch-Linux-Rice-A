@@ -1,5 +1,7 @@
 # Cosmos Rice
 
+![Full Banner](Images/banner1.png)
+
 A modular, distribution-agnostic automated deployment suite for custom Linux desktop environments. Designed for **Arch Linux** and **NixOS**, featuring animated terminal banners, custom dynamic ASCII art, Kitty terminal configurations, and system-level themes (CyberGRUB & SDDM).
 
 ---

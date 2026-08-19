@@ -51,11 +51,9 @@ inject_into_rc() {
 
     if grep -q "COSMOS_FASTFETCH_BANNER_START" "$rc_file"; then
         echo -e "${YELLOW}[..] Updating existing Fastfetch banner in ${rc_file}...${NC}"
-        # Strip old block between boundary delimiters
         sed -i '/# >>> COSMOS_FASTFETCH_BANNER_START >>>/,/# <<< COSMOS_FASTFETCH_BANNER_END <<</d' "$rc_file"
     fi
 
-    # Append fresh block
     echo -e "\n$INJECTION_SNIPPET" >> "$rc_file"
     echo -e "${GREEN}[OK] Injected dynamic Fastfetch startup into ${shell_name} (${rc_file}).${NC}"
 }

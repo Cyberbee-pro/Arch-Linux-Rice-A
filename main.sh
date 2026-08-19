@@ -6,6 +6,12 @@
 
 set -euo pipefail
 
+# Script Directory Resolution
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Ensure companion scripts are executable
+chmod +x "$SCRIPT_DIR"/download.sh "$SCRIPT_DIR"/install.sh "$SCRIPT_DIR"/SrodKitty.sh "$SCRIPT_DIR"/setShell.sh "$SCRIPT_DIR"/syncWallpapers.sh 2>/dev/null || true
+
 # ANSI Palette (No Emojis)
 C_RESET='\033[0m'
 C_BOLD='\033[1m'
@@ -25,9 +31,6 @@ B_MINT='\033[38;5;121m'
 B_PINK='\033[38;5;212m'
 B_PURPLE='\033[38;5;141m'
 B_VIOLET='\033[38;5;99m'
-
-# Script Directory Resolution
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Global Cursor Restore Trap
 cleanup() {
@@ -241,11 +244,12 @@ run_stage() {
 run_all() {
     print_banner
     echo -e "  ${C_YELLOW}* Starting Full Automated Pipeline for ${DISTRO^^}...${C_RESET}\n"
-    
-    run_stage "download.sh"   "1/4: Downloading Packages & Assets"
-    run_stage "install.sh"    "2/4: Installing System Themes & Shell"
-    run_stage "SrodKitty.sh"  "3/4: Deploying Kitty Terminal Configuration"
-    run_stage "setShell.sh"   "4/4: Configuring Shell & Dynamic ASCII Art"
+
+    run_stage "download.sh"        "1/5: Downloading Packages & Assets"
+    run_stage "install.sh"         "2/5: Installing System Themes & Shell"
+    run_stage "SrodKitty.sh"       "3/5: Deploying Kitty Terminal Configuration"
+    run_stage "setShell.sh"        "4/5: Configuring Shell & Dynamic ASCII Art"
+    run_stage "syncWallpapers.sh"  "5/5: Deploying Wallpapers (Structured)"
 
     echo -e "  ${C_DARK}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
     echo -e "  ${C_GREEN}${C_BOLD}[OK] Cosmos Rice deployment completed.${C_RESET}"
@@ -263,16 +267,17 @@ render_status_bar
 # --- Menu Loop ---
 while true; do
     echo -e "  ${C_BOLD}Select an operation:${C_RESET}\n"
-    echo -e "  ${C_CYAN}[1]${C_RESET} Run Full Pipeline              ${C_DIM}(Execute all stages sequentially)${C_RESET}"
+    echo -e "  ${C_CYAN}[1]${C_RESET} Run Full Pipeline              ${C_DIM}(Execute all 5 stages sequentially)${C_RESET}"
     echo -e "  ${C_CYAN}[2]${C_RESET} Switch Target OS (${DISTRO^^})       ${C_DIM}(Toggle between Arch and NixOS)${C_RESET}"
     echo -e "  ${C_CYAN}[3]${C_RESET} Download Assets                ${C_DIM}(download.sh - Git, Kitty, Fastfetch, Themes)${C_RESET}"
     echo -e "  ${C_CYAN}[4]${C_RESET} Install Themes & Shell         ${C_DIM}(install.sh - Caelestia, SDDM, GRUB)${C_RESET}"
     echo -e "  ${C_CYAN}[5]${C_RESET} Deploy Kitty Terminal Config   ${C_DIM}(SrodKitty.sh - Dotfile Sync & Backups)${C_RESET}"
     echo -e "  ${C_CYAN}[6]${C_RESET} Configure ASCII Art & Shell    ${C_DIM}(setShell.sh - Fastfetch Banner Injection)${C_RESET}"
+    echo -e "  ${C_CYAN}[7]${C_RESET} Sync Wallpapers (Structured)   ${C_DIM}(syncWallpapers.sh - Deploy hierarchy to ~/Pictures/Wallpapers)${C_RESET}"
     echo -e "  ${C_DARK}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
     echo -e "  ${C_RED}[0]${C_RESET} Exit\n"
 
-    read -rp "  Enter choice [0-6]: " choice
+    read -rp "  Enter choice [0-7]: " choice
 
     case "$choice" in
         1) run_all; print_banner ;;
@@ -281,6 +286,7 @@ while true; do
         4) print_banner; run_stage "install.sh" "Installing System Themes & Shell"; read -rp "  Press [Enter] to return..."; print_banner ;;
         5) print_banner; run_stage "SrodKitty.sh" "Deploying Kitty Terminal Configuration"; read -rp "  Press [Enter] to return..."; print_banner ;;
         6) print_banner; run_stage "setShell.sh" "Configuring Shell & Dynamic ASCII Art"; read -rp "  Press [Enter] to return..."; print_banner ;;
+        7) print_banner; run_stage "syncWallpapers.sh" "Deploying Wallpapers (Structured)"; read -rp "  Press [Enter] to return..."; print_banner ;;
         0) echo -e "\n  ${C_DIM}Exiting Cosmos Rice installer.${C_RESET}\n"; exit 0 ;;
         *) echo -e "\n  ${C_RED}[!] Invalid option selected.${C_RESET}"; sleep 1; print_banner ;;
     esac
